@@ -2,7 +2,7 @@ name: Daily Rainfall Scraper
 
 on:
   schedule:
-    - cron: '30 3 * * *'  # Runs daily at 8:30 AM PKT
+    - cron: '30 3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -25,16 +25,26 @@ jobs:
       - name: Run scraper
         run: python scraper.py
 
-      - name: Commit and Push Data
+      - name: Debug Git Setup
+        run: |
+          echo "🔍 Current Git Remote:"
+          git remote -v
+          echo "🔍 Current Branch:"
+          git branch
+          echo "🔍 Git Status:"
+          git status
+
+      - name: Commit and Push CSV
         env:
-          TOKEN: ${{ secrets.GH_PAT }}
+          GH_PAT: ${{ secrets.GH_PAT }}
         run: |
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
+
+          echo "https://x-access-token:${GH_PAT}@github.com" > ~/.git-credentials
           git config --global credential.helper store
 
-          echo "https://x-access-token:${TOKEN}@github.com" > ~/.git-credentials
-
           git add *.csv
-          git commit -m "Add data for $(date +'%Y-%m-%d')" || echo "No changes to commit"
-          git push https://x-access-token:${TOKEN}@github.com/muhammadshah10/pakistan-rainfall-scraper.git HEAD:main
+          git commit -m "Add data for $(date +'%Y-%m-%d')" || echo "No changes"
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/muhammadshah10/pakistan-rainfall-scraper.git
+          git push origin HEAD
