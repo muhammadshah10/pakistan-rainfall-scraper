@@ -2,7 +2,7 @@ name: Daily Rainfall Scraper
 
 on:
   schedule:
-    - cron: '30 3 * * *'  # Runs daily at 3:30 AM UTC (~8:30 AM Pakistan Time)
+    - cron: '42 6 * * *'  # Runs daily at 6:42 AM UTC (~11:42 AM Pakistan Time)
   workflow_dispatch:       # Allows manual run from GitHub
 
 jobs:
