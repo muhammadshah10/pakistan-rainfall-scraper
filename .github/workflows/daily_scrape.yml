@@ -2,7 +2,7 @@ name: Daily Rainfall Scraper
 
 on:
   schedule:
-    - cron: '4 7 * * *'  # Runs daily at 12:04 PM Pakistan Time (UTC+5)
+    - cron: '13 7 * * *'  # Runs daily at 12:13 PM Pakistan Time (UTC+5)
   workflow_dispatch:       # Manual trigger
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
 
       - name: 📦 Install dependencies
         run: |
-          pip install requests beautifulsoup4 pandas tqdm colorama
+          pip install requests beautifulsoup4 pandas tqdm
 
       - name: 🚀 Run scraper
         run: python scraper.py
