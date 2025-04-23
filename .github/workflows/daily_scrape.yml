@@ -2,30 +2,30 @@ name: Daily Rainfall Scraper
 
 on:
   schedule:
-    - cron: '42 6 * * *'  # Runs daily at 6:42 AM UTC (~11:42 AM Pakistan Time)
-  workflow_dispatch:       # Allows manual run from GitHub
+    - cron: '4 7 * * *'  # Runs daily at 12:04 PM Pakistan Time (UTC+5)
+  workflow_dispatch:       # Manual trigger
 
 jobs:
   run-scraper:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Python
+      - name: 🐍 Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: 📦 Install dependencies
         run: |
-          pip install requests beautifulsoup4 pandas tqdm
+          pip install requests beautifulsoup4 pandas tqdm colorama
 
-      - name: Run scraper
+      - name: 🚀 Run scraper
         run: python scraper.py
 
-      - name: Commit scraped data
+      - name: 📤 Commit scraped data
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'actions@github.com'
