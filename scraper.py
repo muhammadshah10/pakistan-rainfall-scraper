@@ -3,6 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 import time
 from tqdm import tqdm
+import os
 
 # Base URL
 url = "https://nwfc.pmd.gov.pk/new/rainfall.php"
@@ -63,10 +64,26 @@ for station_id, station_name in tqdm(station_list, desc="🔍 Scraping", unit="s
     except Exception as e:
         print(f"❌ Error on {station_name}: {e}")
 
-    time.sleep(1)  # Avoid overloading server
+    time.sleep(0.5)  # Respect server
 
-# Step 4: Save to CSV
-df = pd.DataFrame(rainfall_data)
-df.to_csv("pakistan_rainfall_data.csv", index=False)
+# Step 4: Convert to DataFrame
+new_df = pd.DataFrame(rainfall_data)
 
-print("\n✅ Done! Data saved to 'pakistan_rainfall_data.csv'")
+# Step 5: Load existing CSV if exists, then merge
+csv_file = "pakistan_rainfall_data.csv"
+if os.path.exists(csv_file):
+    existing_df = pd.read_csv(csv_file)
+    combined_df = pd.concat([existing_df, new_df], ignore_index=True)
+else:
+    combined_df = new_df
+
+# Step 6: Convert Date column to datetime and remove duplicates
+combined_df['Date'] = pd.to_datetime(combined_df['Date'], errors='coerce', dayfirst=True)
+combined_df = combined_df.drop_duplicates()
+
+# Step 7: Sort and save back to CSV
+combined_df = combined_df.sort_values(by='Date', ascending=False)
+combined_df.to_csv(csv_file, index=False)
+
+print("\n✅ Scraping completed successfully!")
+print(f"📁 Updated data saved to: {csv_file}\n")
