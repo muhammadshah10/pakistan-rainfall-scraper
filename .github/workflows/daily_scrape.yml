@@ -1,8 +1,11 @@
-name: Daily Rainfall Scraper
+name: Dynamic Daily Rainfall Scraper
 
 on:
   schedule:
-    - cron: '22 5 * * *'  # Runs daily at 10:22 AM Pakistan Time (UTC+5)
+    - cron: '0 0 * * *'  # First run at 12:00 AM PKT (UTC+5)
+    - cron: '0 8 * * *'  # Second run at 8:00 AM PKT (UTC+5)
+    - cron: '0 16 * * *' # Third run at 4:00 PM PKT (UTC+5)
+    - cron: '0 23 * * *' # Fourth run at 11:00 PM PKT (UTC+5)
   workflow_dispatch:       # Manual trigger
 
 permissions:
@@ -26,7 +29,8 @@ jobs:
           pip install requests beautifulsoup4 pandas tqdm
 
       - name: 🚀 Run scraper
-        run: python scraper.py
+        run: |
+          python scraper.py
 
       - name: 🧪 Debug Git Info
         run: |
