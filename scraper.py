@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
-from tqdm import tqdm
 import os
 
 # ScraperAPI URL with your API key
@@ -49,16 +49,14 @@ station_list = [(opt['value'], opt.text.strip()) for opt in stations if opt['val
 # Step 3: Prepare to store scraped data
 rainfall_data = []
 
-# Step 4: Scrape each station using tqdm
-print("\n📊 Scraping Rainfall Data...\n")
-for station_id, station_name in tqdm(station_list, desc="🔍 Scraping", unit="station"):
+# Step 4: Function to scrape each station
+def scrape_station(station_id, station_name):
     form_data = {
         'station': station_id,
         'filter': 'station'
     }
 
     try:
-        # Use ScraperAPI for posting the request
         res = session.post(f"{SCRAPERAPI_URL}?api_key={API_KEY}&url={url}", data=form_data)
         page = BeautifulSoup(res.text, 'html.parser')
         table = page.find("table", class_="table table-bordered")
@@ -92,15 +90,21 @@ for station_id, station_name in tqdm(station_list, desc="🔍 Scraping", unit="s
     except Exception as e:
         print(f"❌ Error on {station_name}: {e}")
 
-    time.sleep(0.5)  # Respect server
+# Step 5: Use ThreadPoolExecutor for parallel scraping
+with ThreadPoolExecutor(max_workers=10) as executor:
+    futures = [executor.submit(scrape_station, station_id, station_name) for station_id, station_name in station_list]
+    
+    # Wait for all futures to complete
+    for future in as_completed(futures):
+        future.result()  # This will raise exceptions if any occurred
 
-# Step 5: Convert to DataFrame
+# Step 6: Convert to DataFrame
 new_df = pd.DataFrame(rainfall_data)
 
-# Step 6: Remove rows with blank or NaT in date before proceeding
+# Step 7: Remove rows with blank or NaT in date before proceeding
 new_df = new_df[new_df['Date'].str.strip() != ""]
 
-# Step 7: Load existing CSV if exists, then merge
+# Step 8: Load existing CSV if exists, then merge
 csv_file = "pakistan_rainfall_data.csv"
 if os.path.exists(csv_file):
     existing_df = pd.read_csv(csv_file)
@@ -108,12 +112,12 @@ if os.path.exists(csv_file):
 else:
     combined_df = new_df
 
-# Step 8: Convert Date column to datetime and clean
+# Step 9: Convert Date column to datetime and clean
 combined_df['Date'] = pd.to_datetime(combined_df['Date'], errors='coerce', dayfirst=True)
 combined_df = combined_df.dropna(subset=['Date'])  # remove rows where Date couldn't be parsed
 combined_df = combined_df.drop_duplicates(subset=['Station ID', 'Date', 'Reported Station'])
 
-# Step 9: Sort and save
+# Step 10: Sort and save
 combined_df = combined_df.sort_values(by='Date', ascending=False)
 combined_df.to_csv(csv_file, index=False)
 
