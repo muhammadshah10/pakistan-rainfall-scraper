@@ -1,8 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import time
+from tqdm import tqdm
 import os
 
 # ScraperAPI URL with your API key
@@ -18,45 +18,32 @@ session.headers.update({
     "User-Agent": "Mozilla/5.0"
 })
 
-# Retry configuration
-MAX_RETRIES = 5  # Number of retry attempts
-RETRY_DELAY = 5  # Seconds delay before retrying
+# Step 1: Fetch station options
+response = session.get(f"{SCRAPERAPI_URL}?api_key={API_KEY}&url={url}")
 
-# Step 1: Fetch station options with retries
-retries = 0
-response = None
+# Check if response is successful
+if response.status_code != 200:
+    print(f"❌ Failed to fetch data: {response.status_code}")
+    exit(1)
 
-while retries < MAX_RETRIES:
-    try:
-        # Use ScraperAPI for fetching the page
-        response = session.get(f"{SCRAPERAPI_URL}?api_key={API_KEY}&url={url}")
-        response.raise_for_status()  # Raise error for unsuccessful responses (4xx, 5xx)
-        break  # If successful, break out of the loop
-    except requests.exceptions.RequestException as e:
-        retries += 1
-        print(f"❌ Attempt {retries}/{MAX_RETRIES} failed. Retrying in {RETRY_DELAY} seconds...")
-        time.sleep(RETRY_DELAY)  # Wait before retrying
-
-if not response:
-    print("❌ All attempts failed. Exiting.")
-    exit(1)  # Exit if all retries fail
-
-# Step 2: Parse the page and get stations
+# Parse the page to get the list of stations
 soup = BeautifulSoup(response.text, 'html.parser')
 stations = soup.select("select[name='station'] option")
 station_list = [(opt['value'], opt.text.strip()) for opt in stations if opt['value'].isdigit()]
 
-# Step 3: Prepare to store scraped data
+# Step 2: Prepare to store scraped data
 rainfall_data = []
 
-# Step 4: Function to scrape each station
-def scrape_station(station_id, station_name):
+# Step 3: Scrape each station using tqdm
+print("\n📊 Scraping Rainfall Data...\n")
+for station_id, station_name in tqdm(station_list, desc="🔍 Scraping", unit="station"):
     form_data = {
         'station': station_id,
         'filter': 'station'
     }
 
     try:
+        # Use ScraperAPI for posting the request
         res = session.post(f"{SCRAPERAPI_URL}?api_key={API_KEY}&url={url}", data=form_data)
         page = BeautifulSoup(res.text, 'html.parser')
         table = page.find("table", class_="table table-bordered")
@@ -90,21 +77,15 @@ def scrape_station(station_id, station_name):
     except Exception as e:
         print(f"❌ Error on {station_name}: {e}")
 
-# Step 5: Use ThreadPoolExecutor for parallel scraping
-with ThreadPoolExecutor(max_workers=10) as executor:
-    futures = [executor.submit(scrape_station, station_id, station_name) for station_id, station_name in station_list]
-    
-    # Wait for all futures to complete
-    for future in as_completed(futures):
-        future.result()  # This will raise exceptions if any occurred
+    time.sleep(0.5)  # Respect server
 
-# Step 6: Convert to DataFrame
+# Step 4: Convert to DataFrame
 new_df = pd.DataFrame(rainfall_data)
 
-# Step 7: Remove rows with blank or NaT in date before proceeding
+# Step 5: Remove rows with blank or NaT in date before proceeding
 new_df = new_df[new_df['Date'].str.strip() != ""]
 
-# Step 8: Load existing CSV if exists, then merge
+# Step 6: Load existing CSV if exists, then merge
 csv_file = "pakistan_rainfall_data.csv"
 if os.path.exists(csv_file):
     existing_df = pd.read_csv(csv_file)
@@ -112,12 +93,12 @@ if os.path.exists(csv_file):
 else:
     combined_df = new_df
 
-# Step 9: Convert Date column to datetime and clean
+# Step 7: Convert Date column to datetime and clean
 combined_df['Date'] = pd.to_datetime(combined_df['Date'], errors='coerce', dayfirst=True)
 combined_df = combined_df.dropna(subset=['Date'])  # remove rows where Date couldn't be parsed
 combined_df = combined_df.drop_duplicates(subset=['Station ID', 'Date', 'Reported Station'])
 
-# Step 10: Sort and save
+# Step 8: Sort and save
 combined_df = combined_df.sort_values(by='Date', ascending=False)
 combined_df.to_csv(csv_file, index=False)
 
