@@ -3,8 +3,8 @@ name: Dynamic Daily Rainfall Scraper
 on:
   schedule:
     - cron: '4 5 * * *'   # 10:04 AM PKT
-- cron: '7 5 * * *'   # 10:07 AM PKT
-- cron: '10 5 * * *'  # 10:10 AM PKT
+    - cron: '7 5 * * *'   # 10:07 AM PKT
+    - cron: '10 5 * * *'  # 10:10 AM PKT
 
   workflow_dispatch:       # Manual trigger
 
