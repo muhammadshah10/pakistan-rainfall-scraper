@@ -5,6 +5,10 @@ import time
 from tqdm import tqdm
 import os
 
+# ScraperAPI URL with your API key
+SCRAPERAPI_URL = "http://api.scraperapi.com"
+API_KEY = "c0b71f525b1c7e7272d0a1b9968d6f98"
+
 # Base URL
 url = "https://nwfc.pmd.gov.pk/new/rainfall.php"
 
@@ -24,7 +28,8 @@ response = None
 
 while retries < MAX_RETRIES:
     try:
-        response = session.get(url)
+        # Use ScraperAPI for fetching the page
+        response = session.get(f"{SCRAPERAPI_URL}?api_key={API_KEY}&url={url}")
         response.raise_for_status()  # Raise error for unsuccessful responses (4xx, 5xx)
         break  # If successful, break out of the loop
     except requests.exceptions.RequestException as e:
@@ -53,7 +58,8 @@ for station_id, station_name in tqdm(station_list, desc="🔍 Scraping", unit="s
     }
 
     try:
-        res = session.post(url, data=form_data, timeout=10)
+        # Use ScraperAPI for posting the request
+        res = session.post(f"{SCRAPERAPI_URL}?api_key={API_KEY}&url={url}", data=form_data)
         page = BeautifulSoup(res.text, 'html.parser')
         table = page.find("table", class_="table table-bordered")
 
