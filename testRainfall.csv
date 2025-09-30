@@ -1,4 +1,6 @@
 ﻿Station ID,Station Name,Province,Reported Station,Rainfall (mm),Date
+41764,HYDERABAD,Sindh,HYDERABAD,0,"30 Sep, 2025"
+41786,MITHI,Sindh,MITHI,1,"30 Sep, 2025"
 41535,Abbotabad,KPK,Abbotabad,11,"26 Sep, 2025"
 41567,Attock,Punjab,Attock,1,"26 Sep, 2025"
 41506,CHITRAL,KPK,CHITRAL,4,"26 Sep, 2025"
@@ -143,7 +145,7 @@
 41535,Abbotabad,KPK,Abbotabad,11,"04 Sep, 2025"
 41516,GILGIT,GB,GILGIT,1,"04 Sep, 2025"
 41598,JHELUM,Punjab,JHELUM,0,"04 Sep, 2025"
-43534,Jammu,Kashmir,Jammu,61,"04 Sep, 2025"
+43534,Jammu,Kashmir,Jammu,87,"04 Sep, 2025"
 41640,LAHORE,Punjab,LAHORE,3,"04 Sep, 2025"
 43535,Leh,Kashmir,Leh,5,"04 Sep, 2025"
 41525,MALAM JABBA,KPK,MALAM JABBA,29,"04 Sep, 2025"
