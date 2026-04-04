@@ -25,17 +25,7 @@ jobs:
 
       - name: 📦 Install dependencies
         run: |
-          python -m pip install --upgrade pip
           pip install requests beautifulsoup4 pandas tqdm urllib3
-
-      - name: 🔎 Test access to PMD pages
-        run: |
-          echo "Testing homepage..."
-          curl -I https://nwfc.pmd.gov.pk/ || true
-          echo "Testing rainfall page..."
-          curl -I https://nwfc.pmd.gov.pk/new/rainfall.php || true
-          echo "Testing rainfall page with browser user-agent..."
-          curl -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36" -I https://nwfc.pmd.gov.pk/new/rainfall.php || true
 
       - name: 🚀 Run scraper
         run: |
@@ -57,8 +47,11 @@ jobs:
           git config --global user.name "github-actions"
           git config --global user.email "actions@github.com"
 
-          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git
+          git remote set-url origin https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}
+          echo "https://x-access-token:${GH_PAT}@github.com" > ~/.git-credentials
+          git config --global credential.helper store
 
+          git pull origin $(git branch --show-current)
           git add *.csv
-          git commit -m "Add data for $(date +'%Y-%m-%d')" || echo "No changes to commit"
-          git push origin HEAD:${{ github.ref_name }}
+          git commit -m "Add data for $(date +'%Y-%m-%d')" || echo "No changes"
+          git push origin HEAD
